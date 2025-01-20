@@ -50,6 +50,7 @@ class Weather(QWidget):
         self.temperature.setAlignment(Qt.AlignCenter)
         self.desc.setAlignment(Qt.AlignCenter)
         self.weather_emoji.setAlignment(Qt.AlignCenter)
+        self.time_label.setAlignment(Qt.AlignRight)
 
         self.input.setObjectName("input")
         self.weather_emoji.setObjectName("emoji")
@@ -86,7 +87,7 @@ class Weather(QWidget):
         self.timer.start(1000)
 
     def update_time(self):
-        cur_time = QDateTime.currentDateTime().toString(f"   hh:mm AP\ndd-MM-yyyy")
+        cur_time = QDateTime.currentDateTime().toString(f"hh:mm AP\ndd-MM-yyyy")
         self.time_label.setText(cur_time)
 
     def get_weather_info(self):
