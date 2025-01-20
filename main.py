@@ -86,7 +86,7 @@ class Weather(QWidget):
         self.timer.start(1000)
 
     def update_time(self):
-        cur_time = QDateTime.currentDateTime().toString("HH:mm\ndd-MM-yyyy")
+        cur_time = QDateTime.currentDateTime().toString(f"   hh:mm AP\ndd-MM-yyyy")
         self.time_label.setText(cur_time)
 
     def get_weather_info(self):
