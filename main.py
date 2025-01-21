@@ -22,8 +22,8 @@ class Weather(QWidget):
         self.timer = QTimer(self)
 
         self.weather_emoji = QLabel("", self)
-        self.weather_emoji.setFixedWidth(70)
-        self.weather_emoji.setFixedHeight(70)
+        self.weather_emoji.setFixedWidth(100)
+        self.weather_emoji.setFixedHeight(100)
         self.weather_emoji.setScaledContents(True)
 
         self.desc = QLabel("", self)
@@ -57,8 +57,12 @@ class Weather(QWidget):
         self.time_label.setObjectName("time")
 
         self.setStyleSheet("""
-            QLabel, QLineEdit, QPushButton {
-                font-size: 40px;
+            QLineEdit, QPushButton, QLabel#time {
+                font-size: 30px;
+                font-family: Calibri;
+            }
+            QLabel {
+                font-size: 50px;
                 font-family: Calibri;
             }
             QLineEdit#input {
@@ -78,7 +82,7 @@ class Weather(QWidget):
 
         self.update_time()
         self.start_clock()
-        self.input.setPlaceholderText("Enter a city, region, or country name")
+        self.input.setPlaceholderText("Enter a location name")
         self.input.returnPressed.connect(self.get_weather_info)
         self.button.clicked.connect(self.get_weather_info)
 
