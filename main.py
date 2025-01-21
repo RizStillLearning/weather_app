@@ -171,6 +171,9 @@ class Weather(QWidget):
         elif weather_desc[0]['main'] == 'Thunderstorm':
             pixmap = QPixmap("thunderstorm.png")
             self.weather_emoji.setPixmap(pixmap)
+        elif weather_desc[0]['main'] == 'Fog':
+            pixmap = QPixmap("fog.png")
+            self.weather_emoji.setPixmap(pixmap)
         else:
             self.weather_emoji.setPixmap(QPixmap())
 
