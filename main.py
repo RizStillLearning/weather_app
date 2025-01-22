@@ -57,15 +57,23 @@ class Weather(QWidget):
         self.time_label.setObjectName("time")
 
         self.setStyleSheet("""
-            QLineEdit, QPushButton, QLabel#time {
-                font-size: 30px;
+            QLabel, QLineEdit, QPushButton {
                 font-family: Calibri;
             }
             QLabel {
                 font-size: 50px;
-                font-family: Calibri;
+            }
+            QLineEdit {
+                font-size: 30px;
+            }
+            QLabel#time {
+                font-size: 20px;
+            }
+            QPushButton {
+                font-size: 40px;
             }
             QLineEdit#input {
+                padding: 10px;
                 width: 700px;
             }
             QLabel#time {
