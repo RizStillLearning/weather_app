@@ -68,20 +68,16 @@ class Weather(QWidget):
             }
             QLabel#time {
                 font-size: 20px;
-            }
-            QPushButton {
-                font-size: 40px;
-            }
-            QLineEdit#input {
-                padding: 10px;
-                width: 700px;
-            }
-            QLabel#time {
                 padding-top: 10px;
                 padding-bottom: 10px;
             }
             QPushButton {
+                font-size: 40px;
                 font-weight: bold;
+            }
+            QLineEdit#input {
+                padding: 10px;
+                width: 700px;
             }
             QPushButton:hover {
                 text-decoration: underline;
