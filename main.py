@@ -152,43 +152,42 @@ class Weather(QWidget):
         self.temperature.setText(f"{weather_temp['temp']:.2f}°C")
         self.desc.setText(f"{weather_desc[0]['main']}")
 
+        pixmap = QPixmap()
+
         if weather_desc[0]['main'] == 'Clouds':
             pixmap = QPixmap("cloud.png")
-            self.weather_emoji.setPixmap(pixmap)
 
         elif weather_desc[0]['main'] == 'Rain':
             pixmap = QPixmap("rainy-day.png")
-            self.weather_emoji.setPixmap(pixmap)
+
+        elif weather_desc[0]['main'] == 'Drizzle':
+            pixmap = QPixmap("drizzle.png")
 
         elif weather_desc[0]['main'] == 'Mist':
             pixmap = QPixmap("mist.png")
-            self.weather_emoji.setPixmap(pixmap)
 
         elif weather_desc[0]['main'] == 'Snow':
             pixmap = QPixmap("snow.png")
-            self.weather_emoji.setPixmap(pixmap)
 
         elif weather_desc[0]['main'] == 'Clear':
             if 6 <= loc_datetime.time().hour() < 18:
                 pixmap = QPixmap("clear_day.png")
             else:
                 pixmap = QPixmap("clear_night.png")
-            self.weather_emoji.setPixmap(pixmap)
 
         elif weather_desc[0]['main'] == 'Haze':
-            pixmap = QPixmap("haze.png")
-            self.weather_emoji.setPixmap(pixmap)
+            if 6 <= loc_datetime.time().hour() < 18:
+                pixmap = QPixmap("haze_day.png")
+            else:
+                pixmap = QPixmap("haze_night.png")
 
         elif weather_desc[0]['main'] == 'Thunderstorm':
             pixmap = QPixmap("thunderstorm.png")
-            self.weather_emoji.setPixmap(pixmap)
 
         elif weather_desc[0]['main'] == 'Fog':
             pixmap = QPixmap("fog.png")
-            self.weather_emoji.setPixmap(pixmap)
 
-        else:
-            self.weather_emoji.setPixmap(QPixmap())
+        self.weather_emoji.setPixmap(pixmap)
 
     def reset_label(self):
         self.temperature.setText("")
