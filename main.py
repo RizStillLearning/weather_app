@@ -15,7 +15,7 @@ class Weather(QWidget):
 
         self.input = QLineEdit(self)
 
-        self.button = QPushButton("🔍", self)
+        self.button = QPushButton("Find", self)
         self.city_name = QLabel("", self)
         self.temperature = QLabel("", self)
         self.time_label = QLabel("", self)
@@ -67,24 +67,23 @@ class Weather(QWidget):
             QLineEdit {
                 font-size: 30px;
                 border-radius: 5px;
+                padding: 10px;
+                width: 700px;
             }
             QLabel#time {
                 font-size: 20px;
                 padding-top: 10px;
                 padding-bottom: 10px;
             }
-            QLineEdit#input {
-                padding: 10px;
-                width: 700px;
-            }
             QPushButton {
-                font-size: 45px;
-                font-weight: bold;
-                background-color: white;
+                width: 100px;
+                font-size: 50px;
+                border: 2px solid black;
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #f0f0f0;
+                background-color: lightgray;
+                font-weight: bold;
             }
         """
 
@@ -106,7 +105,7 @@ class Weather(QWidget):
         else:
             self.setStyleSheet(self.default_stylesheet + """
                 QWidget {
-                    background-color: black;
+                    background-color: hsl(60, 1%, 13%);
                 }
                 QLabel {
                     color: white;
@@ -116,7 +115,8 @@ class Weather(QWidget):
                     color: black;
                 }
                 QPushButton {
-                    background-color: black;
+                    background-color: white;
+                    color: black;
                 }
             """)
             
