@@ -27,6 +27,7 @@ class Weather(QWidget):
         self.weather_emoji.setScaledContents(True)
 
         self.desc = QLabel("", self)
+        self.cur_time = QDateTime.currentDateTime()
 
         self.initUI()
 
@@ -56,7 +57,7 @@ class Weather(QWidget):
         self.weather_emoji.setObjectName("emoji")
         self.time_label.setObjectName("time")
 
-        self.setStyleSheet("""
+        self.default_stylesheet = """   
             QLabel, QLineEdit, QPushButton {
                 font-family: Calibri;
             }
@@ -65,38 +66,61 @@ class Weather(QWidget):
             }
             QLineEdit {
                 font-size: 30px;
+                border-radius: 5px;
             }
             QLabel#time {
                 font-size: 20px;
                 padding-top: 10px;
                 padding-bottom: 10px;
             }
-            QPushButton {
-                font-size: 40px;
-                font-weight: bold;
-            }
             QLineEdit#input {
                 padding: 10px;
                 width: 700px;
             }
-            QPushButton:hover {
-                text-decoration: underline;
+            QPushButton {
+                font-size: 45px;
+                font-weight: bold;
+                background-color: white;
+                border-radius: 5px;
             }
-        """)
+            QPushButton:hover {
+                background-color: #f0f0f0;
+            }
+        """
 
-        self.update_time()
+        self.update_time_stylesheet()
         self.start_clock()
         self.input.setPlaceholderText("Enter a location name")
         self.input.returnPressed.connect(self.get_weather_info)
         self.button.clicked.connect(self.get_weather_info)
 
     def start_clock(self):
-        self.timer.timeout.connect(self.update_time)
+        self.timer.timeout.connect(self.update_time_stylesheet)
         self.timer.start(1000)
 
-    def update_time(self):
-        cur_time = QDateTime.currentDateTime().toString(f"hh:mm AP\ndd-MM-yyyy")
-        self.time_label.setText(cur_time)
+    def update_time_stylesheet(self):
+        self.cur_time = QDateTime.currentDateTime()
+
+        if 6 <= self.cur_time.time().hour() < 18:
+            self.setStyleSheet(self.default_stylesheet)
+        else:
+            self.setStyleSheet(self.default_stylesheet + """
+                QWidget {
+                    background-color: black;
+                }
+                QLabel {
+                    color: white;
+                }
+                QLineEdit {
+                    background-color: white;
+                    color: black;
+                }
+                QPushButton {
+                    background-color: black;
+                }
+            """)
+            
+        self.time_label.setText(self.cur_time.toString(f"hh:mm AP\ndd-MM-yyyy"))
 
     def get_weather_info(self):
         city_name = self.input.text()
