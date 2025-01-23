@@ -145,7 +145,7 @@ class Weather(QWidget):
                 weather_temp = data['main']
                 weather_desc = data['weather']
             else:
-                self.temperature.setText("Weather Details Not Found!")
+                self.temperature.setText("Weather Data Not Found!")
                 self.reset_label()
                 return
         else:
