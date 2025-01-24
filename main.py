@@ -116,12 +116,13 @@ class Weather(QWidget):
         else:
             self.setStyleSheet(self.default_stylesheet + """
                 QWidget {
-                    background-color: hsl(0, 1%, 13%);
+                    background-color: hsl(0, 1%, 10%);
                 }
                 QLabel {
                     color: white;
                 }
                 QLineEdit {
+                    background-color: hsl(0, 1%, 30%);
                     border-top: 2px solid white;
                     border-bottom: 2px solid white;
                     border-left: 2px solid white;
