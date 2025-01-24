@@ -68,6 +68,9 @@ class Weather(QWidget):
             }
             QLineEdit {
                 font-size: 30px;
+                border-top: 2px solid black;
+                border-bottom: 2px solid black;
+                border-left: 2px solid black;
                 border-top-left-radius: 5px;
                 border-bottom-left-radius: 5px;
                 padding: 10px;
@@ -96,7 +99,7 @@ class Weather(QWidget):
         self.start_clock()
         self.input.setPlaceholderText("Enter a location name")
 
-        self.button.setFixedHeight(self.input.sizeHint().height() + 5)
+        self.button.setFixedHeight(self.input.sizeHint().height())
 
         self.input.returnPressed.connect(self.get_weather_info)
         self.button.clicked.connect(self.get_weather_info)
