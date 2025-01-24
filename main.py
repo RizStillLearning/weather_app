@@ -45,7 +45,7 @@ class Weather(QWidget):
         vbox.addWidget(self.temperature, alignment=Qt.AlignCenter)
         vbox.addWidget(self.weather_emoji, alignment=Qt.AlignCenter)
         vbox.addWidget(self.desc, alignment=Qt.AlignCenter)
-        vbox.addWidget(self.time_label, alignment=Qt.AlignLeft)
+        vbox.addWidget(self.time_label, alignment=Qt.AlignLeft | Qt.AlignBottom)
 
         self.setLayout(vbox)
 
@@ -91,7 +91,6 @@ class Weather(QWidget):
                 border-bottom-right-radius: 5px;
             }
             QPushButton:hover {
-                background-color: lightgray;
                 text-decoration: underline black solid 5px;
             }
         """
@@ -117,18 +116,24 @@ class Weather(QWidget):
         else:
             self.setStyleSheet(self.default_stylesheet + """
                 QWidget {
-                    background-color: hsl(60, 1%, 13%);
+                    background-color: hsl(0, 1%, 13%);
                 }
                 QLabel {
                     color: white;
                 }
                 QLineEdit {
-                    background-color: white;
-                    color: black;
+                    border-top: 2px solid white;
+                    border-bottom: 2px solid white;
+                    border-left: 2px solid white;
+                    color: white;
                 }
                 QPushButton {
-                    background-color: white;
-                    color: black;
+                    border: 2px solid white;
+                    color: white;
+                }
+                QPushButton:hover {
+                    background-color: hsl(0, 1%, 50%);
+                    text-decoration: underline white solid 5px;
                 }
             """)
             
