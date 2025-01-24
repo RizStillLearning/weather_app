@@ -33,6 +33,8 @@ class Weather(QWidget):
 
     def initUI(self):
         hbox = QHBoxLayout()
+        hbox.setContentsMargins(0, 0, 0, 0)
+        hbox.setSpacing(0)
         hbox.addWidget(self.input)
         hbox.addWidget(self.button)
 
@@ -66,7 +68,8 @@ class Weather(QWidget):
             }
             QLineEdit {
                 font-size: 30px;
-                border-radius: 5px;
+                border-top-left-radius: 5px;
+                border-bottom-left-radius: 5px;
                 padding: 10px;
                 width: 700px;
             }
@@ -78,18 +81,23 @@ class Weather(QWidget):
             QPushButton {
                 width: 100px;
                 font-size: 50px;
+                padding: 10px;
                 border: 2px solid black;
-                border-radius: 5px;
+                border-top-right-radius: 5px;
+                border-bottom-right-radius: 5px;
             }
             QPushButton:hover {
                 background-color: lightgray;
-                font-weight: bold;
+                text-decoration: underline black solid 5px;
             }
         """
 
         self.update_time_stylesheet()
         self.start_clock()
         self.input.setPlaceholderText("Enter a location name")
+
+        self.button.setFixedHeight(self.input.sizeHint().height() + 5)
+
         self.input.returnPressed.connect(self.get_weather_info)
         self.button.clicked.connect(self.get_weather_info)
 
