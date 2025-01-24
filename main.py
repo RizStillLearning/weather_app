@@ -10,6 +10,7 @@ api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
 class Weather(QWidget):
     def __init__(self):
         super().__init__()
+        self.default_stylesheet = None
         self.setWindowTitle("Weather API Application")
         self.setWindowIcon(QIcon("weather.jpg"))
 
