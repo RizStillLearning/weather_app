@@ -1,11 +1,28 @@
 # Weather API app
 import sys
 import requests
+
+from geopy.geocoders import OpenCage
+
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 
 weather_api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
+opencage_api_key = "2cd24990824d4f46a377d41669bfbd11"
+
+geolocator = OpenCage(api_key=opencage_api_key)
+
+def get_country(lat, lon):
+    location = geolocator.reverse((lat, lon), exactly_one=True)
+
+    if location:
+        address = location.raw['components']
+        country = address.get('country')
+
+        return country
+    else:
+        return None
 
 class Weather(QWidget):
     def __init__(self):
@@ -168,7 +185,11 @@ class Weather(QWidget):
             self.reset_label()
             return
 
-        self.city_name.setText(f"{city_info['name']}, {city_info['country']}")
+        country = get_country(lat, lon)
+        if country != city_info['name'] and country is not None:
+            self.city_name.setText(f"{city_info['name']}, {country}")
+        else:
+            self.city_name.setText(f"{city_info['name']}")
 
         base_url = "https://api.openweathermap.org/data/2.5/weather?"
         params = {
