@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayou
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 
-api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
+weather_api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
 
 class Weather(QWidget):
     def __init__(self):
@@ -148,7 +148,7 @@ class Weather(QWidget):
         base_url = "https://api.openweathermap.org/geo/1.0/direct?"
         params = {
             'q': city_name,
-            'appid': api_key,
+            'appid': weather_api_key,
             'limit': 1
         }
 
@@ -168,13 +168,13 @@ class Weather(QWidget):
             self.reset_label()
             return
 
-        self.city_name.setText(city_info['name'])
+        self.city_name.setText(f"{city_info['name']}, {city_info['country']}")
 
         base_url = "https://api.openweathermap.org/data/2.5/weather?"
         params = {
             'lat': lat,
             'lon': lon,
-            'appid': api_key,
+            'appid': weather_api_key,
             'units': 'metric',
             'lang': 'en'
         }
