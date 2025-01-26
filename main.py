@@ -2,6 +2,9 @@
 import sys
 import requests
 
+import math as m
+
+from geopy import Nominatim
 from geopy.geocoders import OpenCage
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton
@@ -11,9 +14,19 @@ from PyQt5.QtCore import Qt, QTimer, QDateTime
 weather_api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
 opencage_api_key = "2cd24990824d4f46a377d41669bfbd11"
 
-geolocator = OpenCage(api_key=opencage_api_key)
+def get_user_location():
+    ipinfo_url = 'https://ipinfo.io/json'
+    response = requests.get(ipinfo_url)
+    data = response.json()
+
+    if response.status_code != 200:
+        return None
+
+    location = data['loc'].split(',')
+    return float(location[0]), float(location[1])
 
 def get_country(lat, lon):
+    geolocator = OpenCage(api_key=opencage_api_key)
     location = geolocator.reverse((lat, lon), exactly_one=True)
 
     if location:
@@ -23,6 +36,31 @@ def get_country(lat, lon):
         return country
     else:
         return None
+
+def haversine(lat1, lon1, lat2, lon2):
+    lat1, lon1, lat2, lon2 = map(m.radians, [lat1, lon1, lat2, lon2])
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = m.sin(dlat / 2) ** 2 + m.cos(lat1) * m.cos(lat2) * m.sin(dlon / 2) ** 2
+    c = 2 * m.atan2(m.sqrt(a), m.sqrt(1 - a))
+
+    r = 6371.01
+    return r * c
+
+def find_closest_city(cities, user_lat, user_lon):
+    closest_city = None
+    min_distance = float('inf')
+
+    for city in cities:
+        lat, lon = city['lat'], city['lon']
+
+        distance = haversine(user_lat, user_lon, lat, lon)
+        if distance < min_distance:
+            closest_city = city
+            min_distance = distance
+
+    return closest_city
 
 class Weather(QWidget):
     def __init__(self):
@@ -166,14 +204,18 @@ class Weather(QWidget):
         params = {
             'q': city_name,
             'appid': weather_api_key,
-            'limit': 1
+            'limit': 5
         }
 
         response = requests.get(base_url, params=params)
+
         if response.status_code == 200:
             data = response.json()
             if data:
-                city_info = data[0]
+                user_location = get_user_location()
+                user_lat = user_location[0]
+                user_lon = user_location[1]
+                city_info = find_closest_city(data, user_lat, user_lon)
                 lat = city_info['lat']
                 lon = city_info['lon']
             else:
