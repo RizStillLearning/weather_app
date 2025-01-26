@@ -150,7 +150,9 @@ class Weather(QWidget):
             }
         """
 
-        self.update_time_stylesheet()
+        self.update_time()
+        self.update_stylesheet()
+
         self.start_clock()
         self.input.setPlaceholderText("Enter a location name")
 
@@ -160,12 +162,15 @@ class Weather(QWidget):
         self.button.clicked.connect(self.get_weather_info)
 
     def start_clock(self):
-        self.timer.timeout.connect(self.update_time_stylesheet)
+        self.timer.timeout.connect(self.update_time)
+        self.timer.timeout.connect(self.update_stylesheet)
         self.timer.start(1000)
 
-    def update_time_stylesheet(self):
+    def update_time(self):
         self.cur_time = QDateTime.currentDateTime()
+        self.time_label.setText(self.cur_time.toString(f"hh:mm AP\ndd-MM-yyyy"))
 
+    def update_stylesheet(self):
         if 6 <= self.cur_time.time().hour() < 18:
             self.setStyleSheet(self.default_stylesheet)
         else:
@@ -192,8 +197,6 @@ class Weather(QWidget):
                     text-decoration: underline white solid 5px;
                 }
             """)
-            
-        self.time_label.setText(self.cur_time.toString(f"hh:mm AP\ndd-MM-yyyy"))
 
     def get_weather_info(self):
         city_name = self.input.text()
