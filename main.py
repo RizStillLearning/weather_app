@@ -1,10 +1,11 @@
 # Weather API app
 import sys
 import requests
-
+import time as tm
 import math as m
 
 from geopy.geocoders import OpenCage
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QIcon, QPixmap
@@ -12,6 +13,8 @@ from PyQt5.QtCore import Qt, QTimer, QDateTime
 
 weather_api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
 opencage_api_key = "2cd24990824d4f46a377d41669bfbd11"
+
+light_theme = True
 
 def get_user_location():
     ipinfo_url = 'https://ipinfo.io/json'
@@ -25,16 +28,27 @@ def get_user_location():
     return float(location[0]), float(location[1])
 
 def get_country(lat, lon):
-    geolocator = OpenCage(api_key=opencage_api_key)
-    location = geolocator.reverse((lat, lon), exactly_one=True)
-
-    if location:
-        address = location.raw['components']
-        country = address.get('country')
-
-        return country
-    else:
-        return None
+    geolocator = OpenCage(api_key=opencage_api_key, timeout=10)  # Increase timeout to 10 seconds
+    retries = 3
+    for i in range(retries):
+        try:
+            location = geolocator.reverse((lat, lon), exactly_one=True)
+            if location:
+                address = location.raw['components']
+                country = address.get('country')
+                return country
+            else:
+                return None
+        except GeocoderTimedOut:
+            if i < retries - 1:  # Retry if not the last attempt
+                time.sleep(2)  # Wait for 2 seconds before retrying
+                continue
+            else:
+                raise GeocoderTimedOut("Service timed out after multiple attempts")
+        except GeocoderServiceError as e:
+            print(f"Geocoding service error: {e}")
+            break
+    return None
 
 def haversine(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(m.radians, [lat1, lon1, lat2, lon2])
@@ -71,6 +85,7 @@ class Weather(QWidget):
         self.input = QLineEdit(self)
 
         self.button = QPushButton("Find", self)
+        self.theme_button = QPushButton("Change Theme", self)
         self.city_name = QLabel("", self)
         self.distance = QLabel("", self)
         self.temperature = QLabel("", self)
@@ -101,7 +116,12 @@ class Weather(QWidget):
         vbox.addWidget(self.temperature, alignment=Qt.AlignCenter)
         vbox.addWidget(self.weather_emoji, alignment=Qt.AlignCenter)
         vbox.addWidget(self.desc, alignment=Qt.AlignCenter)
-        vbox.addWidget(self.time_label, alignment=Qt.AlignLeft | Qt.AlignBottom)
+
+        hbox2 = QHBoxLayout()
+        hbox2.addWidget(self.time_label, alignment=Qt.AlignLeft)
+        hbox2.addWidget(self.theme_button, alignment=Qt.AlignRight)
+
+        vbox.addLayout(hbox2)
 
         self.setLayout(vbox)
 
@@ -112,6 +132,8 @@ class Weather(QWidget):
         self.weather_emoji.setAlignment(Qt.AlignCenter)
         self.time_label.setAlignment(Qt.AlignRight)
 
+        self.button.setObjectName("find")
+        self.theme_button.setObjectName("theme_button")
         self.input.setObjectName("input")
         self.weather_emoji.setObjectName("emoji")
         self.time_label.setObjectName("time")
@@ -139,20 +161,26 @@ class Weather(QWidget):
                 padding-bottom: 10px;
             }
             QPushButton {
+                padding: 10px;
+                color: white;
+                background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 black, stop:1 grey);
+            }
+            QPushButton#theme_button {
+                font-size: 30px;
+                border: 2px solid black;
+                border-radius: 5px;
+            }
+            QPushButton#find {
                 width: 100px;
                 font-size: 50px;
-                padding: 10px;
                 border: 2px solid black;
                 border-top-right-radius: 5px;
                 border-bottom-right-radius: 5px;
             }
-            QPushButton:hover {
-                text-decoration: underline black solid 5px;
-            }
         """
 
         self.update_time()
-        self.update_stylesheet()
+        self.setStyleSheet(self.default_stylesheet)
 
         self.start_clock()
         self.input.setPlaceholderText("Enter a location name")
@@ -161,19 +189,21 @@ class Weather(QWidget):
 
         self.input.returnPressed.connect(self.get_weather_info)
         self.button.clicked.connect(self.get_weather_info)
+        self.theme_button.clicked.connect(self.change_theme)
 
     def start_clock(self):
         self.timer.timeout.connect(self.update_time)
-        self.timer.timeout.connect(self.update_stylesheet)
         self.timer.start(1000)
 
     def update_time(self):
         self.cur_time = QDateTime.currentDateTime()
         self.time_label.setText(self.cur_time.toString(f"hh:mm AP\ndd-MM-yyyy"))
 
-    def update_stylesheet(self):
-        if 6 <= self.cur_time.time().hour() < 18:
+    def change_theme(self):
+        global light_theme
+        if not light_theme:
             self.setStyleSheet(self.default_stylesheet)
+            light_theme = True
         else:
             self.setStyleSheet(self.default_stylesheet + """
                 QWidget {
@@ -189,15 +219,12 @@ class Weather(QWidget):
                     border-left: 2px solid white;
                     color: white;
                 }
-                QPushButton {
+                QPushButton#find, QPushButton#theme_button {
                     border: 2px solid white;
-                    color: white;
-                }
-                QPushButton:hover {
-                    background-color: hsl(0, 1%, 50%);
-                    text-decoration: underline white solid 5px;
+                    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 black, stop:1 grey);
                 }
             """)
+            light_theme = False
 
     def get_weather_info(self):
         city_name = self.input.text()
@@ -232,9 +259,15 @@ class Weather(QWidget):
             self.city_name.setText("Failed to Fetch Location Data")
             self.reset_label()
             return
-
+        
         country = get_country(lat, lon)
-        if country != city_info[0]['name'] and country is not None:
+       
+        if country is None:
+            self.city_name.setText("Country Not Found!")
+            self.reset_label()
+            return
+
+        if country != city_info[0]['name']:
             self.city_name.setText(f"{city_info[0]['name']}, {country}")
         else:
             self.city_name.setText(f"{city_info[0]['name']}")
