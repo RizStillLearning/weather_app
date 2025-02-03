@@ -9,7 +9,7 @@ from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import Qt, QTimer, QDateTime
+from PyQt5.QtCore import Qt, QTimer, QDateTime, QThread, pyqtSignal
 
 weather_api_key = "5f1e14a4a4bcab59a4c3ddbdcad77e42"
 opencage_api_key = "2cd24990824d4f46a377d41669bfbd11"
@@ -74,6 +74,61 @@ def find_closest_city(cities, user_lat, user_lon):
             min_distance = distance
 
     return (closest_city, min_distance)
+
+class WeatherFetchThread(QThread):
+    data_fetched = pyqtSignal(dict, float)
+
+    def __init__(self, city_name):
+        super().__init__()
+        self.city_name = city_name
+
+    def run(self):
+        base_url = "https://api.openweathermap.org/geo/1.0/direct?"
+        params = {
+            'q': self.city_name,
+            'appid': weather_api_key,
+            'limit': 5
+        }
+
+        response = requests.get(base_url, params=params)
+        distance = 0
+
+        if response.status_code == 200:
+            data = response.json()
+            if data:
+                user_location = get_user_location()
+                user_lat = user_location[0]
+                user_lon = user_location[1]
+                city_info = find_closest_city(data, user_lat, user_lon)
+                lat = city_info[0]['lat']
+                lon = city_info[0]['lon']
+                distance = city_info[1]
+                country = get_country(lat, lon)
+                weather_data = self.get_weather_data(lat, lon)
+                self.data_fetched.emit({
+                    'city_info': city_info,
+                    'country': country,
+                    'weather_data': weather_data
+                }, distance)
+            else:
+                self.data_fetched.emit(None, distance)
+        else:
+            self.data_fetched.emit(None, distance)
+
+    def get_weather_data(self, lat, lon):
+        base_url = "https://api.openweathermap.org/data/2.5/weather?"
+        params = {
+            'lat': lat,
+            'lon': lon,
+            'appid': weather_api_key,
+            'units': 'metric',
+            'lang': 'en'
+        }
+
+        response = requests.get(base_url, params=params)
+        if response.status_code == 200:
+            return response.json()
+        return None
 
 class Weather(QWidget):
     def __init__(self):
@@ -229,114 +284,72 @@ class Weather(QWidget):
     def get_weather_info(self):
         city_name = self.input.text()
         self.input.setText("")
+
+        self.weather_thread = WeatherFetchThread(city_name)
+        self.weather_thread.data_fetched.connect(self.update_ui)
+        self.weather_thread.start()
+
+    def update_ui(self, data, distance):
+        if data is None:
+            self.city_name.setText("City Not Found or Failed to Fetch Data")
+            self.reset_label()
+            return
+
+        city_info = data['city_info']
+        country = data['country']
+        weather_data = data['weather_data']
         current_utc_datetime = QDateTime.currentDateTimeUtc()
 
-        base_url = "https://api.openweathermap.org/geo/1.0/direct?"
-        params = {
-            'q': city_name,
-            'appid': weather_api_key,
-            'limit': 5
-        }
-
-        response = requests.get(base_url, params=params)
-        distance = 0
-
-        if response.status_code == 200:
-            data = response.json()
-            if data:
-                user_location = get_user_location()
-                user_lat = user_location[0]
-                user_lon = user_location[1]
-                city_info = find_closest_city(data, user_lat, user_lon)
-                lat = city_info[0]['lat']
-                lon = city_info[0]['lon']
-                distance = city_info[1]
-            else:
-                self.city_name.setText("City Not Found!")
-                self.reset_label()
-                return
-        else:
-            self.city_name.setText("Failed to Fetch Location Data")
-            self.reset_label()
-            return
-        
-        country = get_country(lat, lon)
-       
-        if country is None:
-            self.city_name.setText("Country Not Found!")
-            self.reset_label()
-            return
-
-        if country != city_info[0]['name']:
+        if country != city_info[0]['name'] and country is not None:
             self.city_name.setText(f"{city_info[0]['name']}, {country}")
         else:
             self.city_name.setText(f"{city_info[0]['name']}")
         self.distance.setText(f"{distance:.2f} km")
 
-        base_url = "https://api.openweathermap.org/data/2.5/weather?"
-        params = {
-            'lat': lat,
-            'lon': lon,
-            'appid': weather_api_key,
-            'units': 'metric',
-            'lang': 'en'
-        }
+        if weather_data:
+            loc_datetime = current_utc_datetime.addSecs(weather_data['timezone'])
+            weather_temp = weather_data['main']
+            weather_desc = weather_data['weather']
 
-        response = requests.get(base_url, params=params)
-        if response.status_code == 200:
-            data = response.json()
-            if data:
-                loc_datetime = current_utc_datetime.addSecs(data['timezone'])
-                weather_temp = data['main']
-                weather_desc = data['weather']
-            else:
-                self.temperature.setText("Weather Data Not Found!")
-                self.reset_label()
-                return
-        else:
-            self.city_name.setText("Failed to Fetch Weather Data")
-            self.reset_label()
-            return
+            self.temperature.setText(f"{weather_temp['temp']:.2f}°C")
+            self.desc.setText(f"{weather_desc[0]['main']}")
 
-        self.temperature.setText(f"{weather_temp['temp']:.2f}°C")
-        self.desc.setText(f"{weather_desc[0]['main']}")
+            pixmap = QPixmap()
 
-        pixmap = QPixmap()
+            if weather_desc[0]['main'] == 'Clouds':
+                pixmap = QPixmap("cloud.png")
 
-        if weather_desc[0]['main'] == 'Clouds':
-            pixmap = QPixmap("cloud.png")
+            elif weather_desc[0]['main'] == 'Rain':
+                pixmap = QPixmap("rainy-day.png")
 
-        elif weather_desc[0]['main'] == 'Rain':
-            pixmap = QPixmap("rainy-day.png")
+            elif weather_desc[0]['main'] == 'Drizzle':
+                pixmap = QPixmap("drizzle.png")
 
-        elif weather_desc[0]['main'] == 'Drizzle':
-            pixmap = QPixmap("drizzle.png")
+            elif weather_desc[0]['main'] == 'Mist':
+                pixmap = QPixmap("mist.png")
 
-        elif weather_desc[0]['main'] == 'Mist':
-            pixmap = QPixmap("mist.png")
+            elif weather_desc[0]['main'] == 'Snow':
+                pixmap = QPixmap("snow.png")
 
-        elif weather_desc[0]['main'] == 'Snow':
-            pixmap = QPixmap("snow.png")
+            elif weather_desc[0]['main'] == 'Clear':
+                if 6 <= loc_datetime.time().hour() < 18:
+                    pixmap = QPixmap("clear_day.png")
+                else:
+                    pixmap = QPixmap("clear_night.png")
 
-        elif weather_desc[0]['main'] == 'Clear':
-            if 6 <= loc_datetime.time().hour() < 18:
-                pixmap = QPixmap("clear_day.png")
-            else:
-                pixmap = QPixmap("clear_night.png")
+            elif weather_desc[0]['main'] == 'Haze':
+                if 6 <= loc_datetime.time().hour() < 18:
+                    pixmap = QPixmap("haze_day.png")
+                else:
+                    pixmap = QPixmap("haze_night.png")
 
-        elif weather_desc[0]['main'] == 'Haze':
-            if 6 <= loc_datetime.time().hour() < 18:
-                pixmap = QPixmap("haze_day.png")
-            else:
-                pixmap = QPixmap("haze_night.png")
+            elif weather_desc[0]['main'] == 'Thunderstorm':
+                pixmap = QPixmap("thunderstorm.png")
 
-        elif weather_desc[0]['main'] == 'Thunderstorm':
-            pixmap = QPixmap("thunderstorm.png")
+            elif weather_desc[0]['main'] == 'Fog':
+                pixmap = QPixmap("fog.png")
 
-        elif weather_desc[0]['main'] == 'Fog':
-            pixmap = QPixmap("fog.png")
-
-        self.weather_emoji.setPixmap(pixmap)
+            self.weather_emoji.setPixmap(pixmap)
 
     def reset_label(self):
         self.distance.setText("")
