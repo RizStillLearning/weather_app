@@ -28,7 +28,7 @@ def get_user_location():
     return float(location[0]), float(location[1])
 
 def get_country(lat, lon):
-    geolocator = OpenCage(api_key=opencage_api_key, timeout=10)  # Increase timeout to 10 seconds
+    geolocator = OpenCage(api_key=opencage_api_key, timeout=10)
     retries = 3
     for i in range(retries):
         try:
@@ -40,8 +40,8 @@ def get_country(lat, lon):
             else:
                 return None
         except GeocoderTimedOut:
-            if i < retries - 1:  # Retry if not the last attempt
-                time.sleep(2)  # Wait for 2 seconds before retrying
+            if i < retries - 1:  
+                tm.sleep(2)  
                 continue
             else:
                 raise GeocoderTimedOut("Service timed out after multiple attempts")
