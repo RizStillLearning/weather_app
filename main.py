@@ -4,7 +4,6 @@ import requests
 
 import math as m
 
-from geopy import Nominatim
 from geopy.geocoders import OpenCage
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton
