@@ -26,16 +26,27 @@ def get_user_location():
     return float(location[0]), float(location[1])
 
 def get_country(lat, lon):
-    geolocator = OpenCage(api_key=opencage_api_key, timeout=10)
-    location = geolocator.reverse((lat, lon), exactly_one=True)
-
-    if location:
-        address = location.raw['components']
-        country = address.get('country')
-
-        return country
-    else:
-        return None
+    geolocator = OpenCage(api_key=opencage_api_key, timeout=10)  # Increase timeout to 10 seconds
+    retries = 3
+    for i in range(retries):
+        try:
+            location = geolocator.reverse((lat, lon), exactly_one=True)
+            if location:
+                address = location.raw['components']
+                country = address.get('country')
+                return country
+            else:
+                return None
+        except GeocoderTimedOut:
+            if i < retries - 1:  # Retry if not the last attempt
+                time.sleep(2)  # Wait for 2 seconds before retrying
+                continue
+            else:
+                raise GeocoderTimedOut("Service timed out after multiple attempts")
+        except GeocoderServiceError as e:
+            print(f"Geocoding service error: {e}")
+            break
+    return None
 
 def haversine(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(m.radians, [lat1, lon1, lat2, lon2])
@@ -235,7 +246,13 @@ class Weather(QWidget):
             return
         
         country = get_country(lat, lon)
-        if country != city_info[0]['name'] and country is not None:
+       
+        if country is None:
+            self.city_name.setText("Country Not Found!")
+            self.reset_label()
+            return
+
+        if country != city_info[0]['name']:
             self.city_name.setText(f"{city_info[0]['name']}, {country}")
         else:
             self.city_name.setText(f"{city_info[0]['name']}")
