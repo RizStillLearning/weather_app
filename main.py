@@ -1,10 +1,11 @@
 # Weather API app
 import sys
 import requests
-
+import time as tm
 import math as m
 
 from geopy.geocoders import OpenCage
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtGui import QIcon, QPixmap
@@ -25,7 +26,7 @@ def get_user_location():
     return float(location[0]), float(location[1])
 
 def get_country(lat, lon):
-    geolocator = OpenCage(api_key=opencage_api_key)
+    geolocator = OpenCage(api_key=opencage_api_key, timeout=10)
     location = geolocator.reverse((lat, lon), exactly_one=True)
 
     if location:
@@ -232,7 +233,7 @@ class Weather(QWidget):
             self.city_name.setText("Failed to Fetch Location Data")
             self.reset_label()
             return
-
+        
         country = get_country(lat, lon)
         if country != city_info[0]['name'] and country is not None:
             self.city_name.setText(f"{city_info[0]['name']}, {country}")
