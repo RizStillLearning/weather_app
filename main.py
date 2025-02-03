@@ -59,7 +59,7 @@ def find_closest_city(cities, user_lat, user_lon):
             closest_city = city
             min_distance = distance
 
-    return closest_city
+    return closest_city, min_distance
 
 class Weather(QWidget):
     def __init__(self):
@@ -72,6 +72,7 @@ class Weather(QWidget):
 
         self.button = QPushButton("Find", self)
         self.city_name = QLabel("", self)
+        self.distance = QLabel("", self)
         self.temperature = QLabel("", self)
         self.time_label = QLabel("", self)
         self.timer = QTimer(self)
@@ -97,6 +98,7 @@ class Weather(QWidget):
         vbox.addLayout(hbox)
         vbox.addWidget(self.city_name, alignment=Qt.AlignCenter)
         vbox.addWidget(self.temperature, alignment=Qt.AlignCenter)
+        vbox.addWidget(self.distance, alignment=Qt.AlignCenter)
         vbox.addWidget(self.weather_emoji, alignment=Qt.AlignCenter)
         vbox.addWidget(self.desc, alignment=Qt.AlignCenter)
         vbox.addWidget(self.time_label, alignment=Qt.AlignLeft | Qt.AlignBottom)
