@@ -59,7 +59,7 @@ def find_closest_city(cities, user_lat, user_lon):
             closest_city = city
             min_distance = distance
 
-    return closest_city, min_distance
+    return (closest_city, min_distance)
 
 class Weather(QWidget):
     def __init__(self):
@@ -97,8 +97,8 @@ class Weather(QWidget):
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addWidget(self.city_name, alignment=Qt.AlignCenter)
-        vbox.addWidget(self.temperature, alignment=Qt.AlignCenter)
         vbox.addWidget(self.distance, alignment=Qt.AlignCenter)
+        vbox.addWidget(self.temperature, alignment=Qt.AlignCenter)
         vbox.addWidget(self.weather_emoji, alignment=Qt.AlignCenter)
         vbox.addWidget(self.desc, alignment=Qt.AlignCenter)
         vbox.addWidget(self.time_label, alignment=Qt.AlignLeft | Qt.AlignBottom)
@@ -212,6 +212,7 @@ class Weather(QWidget):
         }
 
         response = requests.get(base_url, params=params)
+        distance = 0
 
         if response.status_code == 200:
             data = response.json()
@@ -220,8 +221,9 @@ class Weather(QWidget):
                 user_lat = user_location[0]
                 user_lon = user_location[1]
                 city_info = find_closest_city(data, user_lat, user_lon)
-                lat = city_info['lat']
-                lon = city_info['lon']
+                lat = city_info[0]['lat']
+                lon = city_info[0]['lon']
+                distance = city_info[1]
             else:
                 self.city_name.setText("City Not Found!")
                 self.reset_label()
@@ -232,10 +234,11 @@ class Weather(QWidget):
             return
 
         country = get_country(lat, lon)
-        if country != city_info['name'] and country is not None:
-            self.city_name.setText(f"{city_info['name']}, {country}")
+        if country != city_info[0]['name'] and country is not None:
+            self.city_name.setText(f"{city_info[0]['name']}, {country}")
         else:
-            self.city_name.setText(f"{city_info['name']}")
+            self.city_name.setText(f"{city_info[0]['name']}")
+        self.distance.setText(f"{distance:.2f} km")
 
         base_url = "https://api.openweathermap.org/data/2.5/weather?"
         params = {
@@ -303,6 +306,7 @@ class Weather(QWidget):
         self.weather_emoji.setPixmap(pixmap)
 
     def reset_label(self):
+        self.distance.setText("")
         self.temperature.setText("")
         self.desc.setText("")
         self.weather_emoji.setPixmap(QPixmap())
